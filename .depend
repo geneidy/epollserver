@@ -1,0 +1,6 @@
+main.o: main.cpp Include/main.h Include/EPollServer.h Include/ComLog.h \
+ Include/Cuserdb.h
+EPollServer.o: EPollServer.cpp Include/EPollServer.h Include/ComLog.h \
+ Include/Cuserdb.h
+ComLog.o: ComLog.cpp Include/ComLog.h
+Cuserdb.o: Cuserdb.cpp Include/Cuserdb.h Include/ComLog.h

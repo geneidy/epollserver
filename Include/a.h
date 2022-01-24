@@ -28,7 +28,6 @@ private slots:
 
     void init();
     void cleanup();
-
 };
 
 #endif // A_H

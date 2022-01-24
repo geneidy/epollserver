@@ -30,25 +30,26 @@
 #include "Cuserdb.h"
 
 // maximum received data byte
-#define MAXBYTE     100
-#define OPEN_MAX    100
+#define MAXBYTE 100
+#define OPEN_MAX 100
 
-#define SIZE_OF_LOGIN_MESSAGE  25+1
-#define SIZE_OF_USERNAME       11+1
-#define SIZE_OF_PASSWORD      11+1
+#define SIZE_OF_LOGIN_MESSAGE 25 + 1
+#define SIZE_OF_USERNAME 11 + 1
+#define SIZE_OF_PASSWORD 11 + 1
 
 //#define LISTENQ     20  >> Changed to MaxEvents
 
-#define SERV_PORT   10012
-#define INFTIM      1000
-#define LOCAL_ADDR  "127.0.0.1"
+#define SERV_PORT 10012
+#define INFTIM 1000
+#define LOCAL_ADDR "127.0.0.1"
 
-#define   SERVER_PORT_SIZE 15
+#define SERVER_PORT_SIZE 15
 // #define TIMEOUT     500
 
 using namespace std;
 
-enum tstate {
+enum tstate
+{
     TS_INACTIVE,
     TS_STARTING,
     TS_STARTED,
@@ -60,18 +61,20 @@ enum tstate {
     TS_JOINED
 };
 
-typedef struct thread_info{   /* Used as argument to thread_start() */
-    pthread_t 	thread_id;        /* ID returned by pthread_create() */
-    enum 	tstate eState;  // refer to enum tstate above
-    int       	iThread_num;       /* Application-defined thread # */
-    char     	*thread_message;      /* Saying Hello */
+typedef struct thread_info
+{                         /* Used as argument to thread_start() */
+    pthread_t thread_id;  /* ID returned by pthread_create() */
+    enum tstate eState;   // refer to enum tstate above
+    int iThread_num;      /* Application-defined thread # */
+    char *thread_message; /* Saying Hello */
 } THREAD_INFO;
 
-typedef struct ThreadPool {
-  int iThreadID;
-  uint16_t uiThreadState; 
-  struct ThreadPool* pNext; 
-}THREAD_POOL;
+typedef struct ThreadPool
+{
+    int iThreadID;
+    uint16_t uiThreadState;
+    struct ThreadPool *pNext;
+} THREAD_POOL;
 
 // task item in thread pool
 struct task
@@ -79,11 +82,12 @@ struct task
     // file descriptor or user_data
     epoll_data_t data;
     // next task
-    struct task* next;
+    struct task *next;
 };
 
 // for data transporting
-struct user_data {
+struct user_data
+{
     int fd;
     // real received data size
     unsigned int n_size;
@@ -91,28 +95,30 @@ struct user_data {
     char line[MAXBYTE];
 };
 
-typedef struct CEpollServerCtorList {
+typedef struct CEpollServerCtorList
+{
 
-    int MaxByte;     	// 10
-    int Open_Max;    	//100
-    int MaxEvents;     	//20
-    char szServerPort[SERVER_PORT_SIZE];   	//10012
-    int _INFTIM;      	//1000
-    int Local_addr; 	// "127.0.0.1"
-    int iTimeOut;     	//500
+    int MaxByte;                         // 10
+    int Open_Max;                        //100
+    int MaxEvents;                       //20
+    char szServerPort[SERVER_PORT_SIZE]; //10012
+    int _INFTIM;                         //1000
+    int Local_addr;                      // "127.0.0.1"
+    int iTimeOut;                        //500
 
     int iNumOFileDescriptors;
 
-    uint 	nReadThreads;  // Thread Pool for Read
-    uint 	nWriteThreads; // Thread Pool for Write
+    uint nReadThreads;  // Thread Pool for Read
+    uint nWriteThreads; // Thread Pool for Write
 
-    int   iLoadFactor;  // Max load to a given thread until a new thread is added from the pool
+    int iLoadFactor; // Max load to a given thread until a new thread is added from the pool
 
-    char  szUserFileName[MAX_PATH];
+    char szUserFileName[MAX_PATH];
 
 } EPOLL_CTOR_LIST;
 
-typedef struct TaskQueue {
+typedef struct TaskQueue
+{
     struct task *readhead;
     struct task *readtail;
 
@@ -127,7 +133,8 @@ typedef struct TaskQueue {
 
 } TASK_QUEUE;
 
-class CEpollServer {
+class CEpollServer
+{
 
 public:
     CEpollServer(EPOLL_CTOR_LIST);
@@ -135,48 +142,46 @@ public:
 
     ~CEpollServer();
 
-private:  // yes yes it is by default
-
+private: // yes yes it is by default
     int i, maxi, m_nfds;
-//    int listenfd;
-    int  m_Socket;
-    int  connfd;
+    //    int listenfd;
+    int m_Socket;
+    int connfd;
 
-    static    int m_efd;
+    static int m_efd;
     int m_MaxEvents;
 
-    int   m_iTimeOut;
+    int m_iTimeOut;
     // task node
     struct task *new_task = NULL;
 
-
-    char   m_szServerPort[SERVER_PORT_SIZE];
+    char m_szServerPort[SERVER_PORT_SIZE];
     struct sockaddr_in clientaddr;
     struct sockaddr_in serveraddr;
 
     // epoll descriptor from epoll_create()
     int m_epfd;
 
-    static    struct epoll_event m_ev;
-    struct epoll_event* eventList;
+    static struct epoll_event m_ev;
+    struct epoll_event *eventList;
 
-    int   m_iNumOFileDescriptors;
+    int m_iNumOFileDescriptors;
 
-    pthread_t  *pR_Thread;  // array of read thread
-    pthread_t  *pW_Thread;  // array of write threads
+    pthread_t *pR_Thread; // array of read thread
+    pthread_t *pW_Thread; // array of write threads
 
-    static    pthread_mutex_t *pR_Mutex;
-    static    pthread_cond_t  *pR_Condl;
+    static pthread_mutex_t *pR_Mutex;
+    static pthread_cond_t *pR_Condl;
 
-    static    pthread_mutex_t *pW_Mutex;
-    static    pthread_cond_t  *pW_Condl;
+    static pthread_mutex_t *pW_Mutex;
+    static pthread_cond_t *pW_Condl;
 
-    static    void *readtask(void *args);
-    static    void *writetask(void *args);
-    
-    static    int GetReadThreadFromPool(int  );  
+    static void *readtask(void *args);
+    static void *writetask(void *args);
 
-    static    int GetWriteThreadFromPool(int  );  
+    static int GetReadThreadFromPool(int);
+
+    static int GetWriteThreadFromPool(int);
 
     EPOLL_CTOR_LIST m_CtorList;
 
@@ -187,28 +192,24 @@ private:  // yes yes it is by default
     int m_iWriteMutexIndex;
     double Get_CPU_Time(void);
 
-    static    string m_strLogMsg;
+    static string m_strLogMsg;
     static TASK_QUEUE m_TaskQue;
 
-    char  m_szUserFileName[MAX_PATH];
-    CuserDB* m_pCuserDB;
+    char m_szUserFileName[MAX_PATH];
+    CuserDB *m_pCuserDB;
 
-    void RemoveBlanks(char* szString);
-    static bool  m_bTerminate;
+    void RemoveBlanks(char *szString);
+    static bool m_bTerminate;
 
-    static    THREAD_INFO* m_arrReadThreadInfo;
-    static    THREAD_INFO* m_arrWriteThreadInfo;    
-    
+    static THREAD_INFO *m_arrReadThreadInfo;
+    static THREAD_INFO *m_arrWriteThreadInfo;
+
 public:
-    int  PrepListener();
-    int AuthenticateUser(char* szRecvBuffer);
-    
+    int PrepListener();
+    int AuthenticateUser(char *szRecvBuffer);
+
     int GetError();
     int ProcessEpoll();
     int TerminateThreads();
     TASK_QUEUE GetQueueStatus();
-
-
-
 };
-
